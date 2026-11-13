@@ -144,6 +144,7 @@ STDAPI DllGetClassObject(REFCLSID clsid, REFIID riid, void** ppv) {
 STDAPI DllCanUnloadNow() { return S_FALSE; }
 
 STDAPI DllRegisterServer() {
+    TipLog(L"stub: DllRegisterServer を開始しました");
     HRESULT hr = RegisterComServer();
     if (SUCCEEDED(hr)) hr = RegisterProfile();
     if (SUCCEEDED(hr)) hr = RegisterCategories(true);

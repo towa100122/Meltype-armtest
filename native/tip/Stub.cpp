@@ -74,6 +74,7 @@ constexpr wchar_t kWindowClass[] = L"Meltype.Tip.Stub";
 class StubService final : public ITfTextInputProcessorEx, public ITfDisplayAttributeProvider {
 public:
     StubService() {
+        TipLog(L"stub: COM オブジェクトを生成しました");
         static const ATOM registered = [] {
             WNDCLASSW cls{};
             cls.lpfnWndProc = WindowProc;

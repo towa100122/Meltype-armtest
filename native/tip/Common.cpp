@@ -48,8 +48,12 @@ static bool SelfIsMediumOrLower() {
 
 void TipLog(const wchar_t* format, ...) {
     static int enabled = -1;
-    if (enabled < 0 && !SelfIsMediumOrLower()) enabled = 0;
-    if (enabled < 0) {
+    static ULONGLONG nextCheck = 0;
+    const ULONGLONG now = GetTickCount64();
+    if (enabled != 1 && now >= nextCheck) {
+        nextCheck = now + 1000;
+        enabled = 0;
+        if (!SelfIsMediumOrLower()) return;
         wchar_t value[8] = {};
         enabled = GetEnvironmentVariableW(L"MELTYPE_TIP_LOG", value, 8) > 0 && value[0] == L'1' ? 1 : 0;
         // 環境変数が無ければ、データフォルダーに tip-log という空のファイルがあるときだけ
@@ -69,7 +73,9 @@ void TipLog(const wchar_t* format, ...) {
     va_end(args);
     wchar_t path[MAX_PATH] = {};
     if (GetEnvironmentVariableW(L"LOCALAPPDATA", path, MAX_PATH) == 0) return;
-    StringCchCatW(path, MAX_PATH, L"\\Meltype\\tip.log");
+    StringCchCatW(path, MAX_PATH, L"\\Meltype");
+    CreateDirectoryW(path, nullptr);
+    StringCchCatW(path, MAX_PATH, L"\\tip.log");
     HANDLE file = CreateFileW(path, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE) return;
     SYSTEMTIME now;
