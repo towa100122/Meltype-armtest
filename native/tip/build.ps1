@@ -75,12 +75,12 @@ foreach ($name in $dlls.Name) {
     if (-not (Test-Path -LiteralPath $rsp)) { throw "ARM64 のリンク入力が見つかりません: $rsp" }
     $nativeInputs = @(
         Get-Content -LiteralPath $rsp |
-            Where-Object { $_ -match '(?i)\.(obj|lib|def)"?$' } |
-            ForEach-Object { $_ -replace '(?i)^/def:', '/defArm64Native:' }
+            Where-Object { $_ -match '(?i)\.(obj|lib)"?$' }
     )
     if (-not $nativeInputs) { throw "ARM64 のリンク入力が空です: $rsp" }
     $nativeArgs = $nativeInputs -join ' '
     $sources = (($dlls | Where-Object Name -eq $name).Sources -join ' ')
+    $def = Join-Path $here "$name.def"
     $nativeRes = Join-Path $here 'obj\arm64-native\MeltypeTip.res'
     $out = Join-Path $here 'bin\arm64'
     $obj = Join-Path $here 'obj\arm64ec'
@@ -88,7 +88,7 @@ foreach ($name in $dlls.Name) {
     $cmd = @(
         "call `"$vcvars`" x64_arm64",
         "cd /d `"$here`"",
-        "cl /nologo /Brepro /arm64EC /std:c++17 /EHsc /W4 /wd4100 /utf-8 /DUNICODE /D_UNICODE $optimize /Fo`"$obj\\`" /Fd`"$obj\\`" /LD $sources `"$nativeRes`" /link /Brepro /machine:arm64x /DEF:$name.def /IMPLIB:`"$obj\$name.lib`" /OUT:`"$out\$name.dll`" $libs $nativeArgs"
+        "cl /nologo /Brepro /arm64EC /std:c++17 /EHsc /W4 /wd4100 /utf-8 /DUNICODE /D_UNICODE $optimize /Fo`"$obj\\`" /Fd`"$obj\\`" /LD $sources `"$nativeRes`" /link /Brepro /machine:arm64x /DEF:`"$def`" /defArm64Native:`"$def`" /IMPLIB:`"$obj\$name.lib`" /OUT:`"$out\$name.dll`" $libs $nativeArgs"
     ) -join ' && '
     Write-Host "== arm64 ($name) =="
     cmd /c $cmd
