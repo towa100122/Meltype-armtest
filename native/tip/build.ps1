@@ -81,14 +81,14 @@ foreach ($name in $dlls.Name) {
     if (-not $nativeInputs) { throw "ARM64 のリンク入力が空です: $rsp" }
     $nativeArgs = $nativeInputs -join ' '
     $sources = (($dlls | Where-Object Name -eq $name).Sources -join ' ')
+    $nativeRes = Join-Path $here 'obj\arm64-native\MeltypeTip.res'
     $out = Join-Path $here 'bin\arm64'
     $obj = Join-Path $here 'obj\arm64ec'
     New-Item -ItemType Directory -Force -Path $out, $obj | Out-Null
     $cmd = @(
         "`"$vcvars`" x64_arm64ec >nul",
         "cd /d `"$here`"",
-        "rc /nologo /fo `"$obj\MeltypeTip.res`" MeltypeTip.rc",
-        "cl /nologo /Brepro /arm64EC /std:c++17 /EHsc /W4 /wd4100 /utf-8 /DUNICODE /D_UNICODE $optimize /Fo`"$obj\\`" /Fd`"$obj\\`" /LD $sources `"$obj\MeltypeTip.res`" /link /Brepro /machine:arm64x /DEF:$name.def /IMPLIB:`"$obj\$name.lib`" /OUT:`"$out\$name.dll`" $libs $nativeArgs"
+        "cl /nologo /Brepro /arm64EC /std:c++17 /EHsc /W4 /wd4100 /utf-8 /DUNICODE /D_UNICODE $optimize /Fo`"$obj\\`" /Fd`"$obj\\`" /LD $sources `"$nativeRes`" /link /Brepro /machine:arm64x /DEF:$name.def /IMPLIB:`"$obj\$name.lib`" /OUT:`"$out\$name.dll`" $libs $nativeArgs"
     ) -join ' && '
     Write-Host "== arm64 ($name) =="
     cmd /c $cmd
