@@ -7,13 +7,14 @@ internal static class TipBuildTests
 {
     private const string X64 = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     private const string X86 = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+    private const string Arm64 = "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD";
     private const string Other = "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC";
 
-    // x64・x86 の下に MeltypeTipImpl.dll.sha256 を置いた tip フォルダー (hash が null のアーキテクチャには置かない)
-    private static string TipFolder(string root, string name, string? x64, string? x86)
+    // x64・x86・arm64 の下に MeltypeTipImpl.dll.sha256 を置いた tip フォルダー (hash が null のアーキテクチャには置かない)
+    private static string TipFolder(string root, string name, string? x64, string? x86, string? arm64 = null)
     {
         var folder = Path.Combine(root, name);
-        foreach (var (arch, hash) in new[] { ("x64", x64), ("x86", x86) })
+        foreach (var (arch, hash) in new[] { ("x64", x64), ("x86", x86), ("arm64", arm64) })
         {
             Directory.CreateDirectory(Path.Combine(folder, arch));
             if (hash is not null) File.WriteAllText(Path.Combine(folder, arch, "MeltypeTipImpl.dll.sha256"), hash);
@@ -33,9 +34,10 @@ internal static class TipBuildTests
     [Test]
     public static void TipBuild_AcceptsOnlyTheImplShippedWithThisExe() => WithFolder(root =>
     {
-        var build = new Tip.TipBuild(TipFolder(root, "shipped", X64, X86));
+        var build = new Tip.TipBuild(TipFolder(root, "shipped", X64, X86, Arm64));
         Assert.True(build.Matches(Request($"\"impl\":\"{X64}\",")), "64 ビットのアプリの impl");
         Assert.True(build.Matches(Request($"\"impl\":\"{X86}\",")), "32 ビットのアプリの impl");
+        Assert.True(build.Matches(Request($"\"impl\":\"{Arm64}\",")), "ARM64 のアプリの impl");
         Assert.True(build.Matches(Request($"\"impl\":\"{X64.ToLowerInvariant()}\",")), "ハッシュの大文字・小文字は区別しない");
         Assert.True(!build.Matches(Request($"\"impl\":\"{Other}\",")), "別ビルドの impl");
         Assert.True(!build.Matches(Request("")), "stub と impl に分割する前の DLL (impl を送らない)");
@@ -54,11 +56,12 @@ internal static class TipBuildTests
     });
 
     [Test]
-    public static void TipBuild_InstalledImplMustMatchForBothArchitectures() => WithFolder(root =>
+    public static void TipBuild_InstalledImplMustMatchForAllArchitectures() => WithFolder(root =>
     {
-        var build = new Tip.TipBuild(TipFolder(root, "shipped", X64, X86));
-        Assert.True(build.IsInstalled(TipFolder(root, "same", X64, X86)), "登録済みの impl が同じビルド");
-        Assert.True(!build.IsInstalled(TipFolder(root, "old-x86", X64, Other)), "32 ビットの impl だけ別ビルド");
+        var build = new Tip.TipBuild(TipFolder(root, "shipped", X64, X86, Arm64));
+        Assert.True(build.IsInstalled(TipFolder(root, "same", X64, X86, Arm64)), "登録済みの impl が同じビルド");
+        Assert.True(!build.IsInstalled(TipFolder(root, "old-x86", X64, Other, Arm64)), "32 ビットの impl だけ別ビルド");
+        Assert.True(!build.IsInstalled(TipFolder(root, "old-arm64", X64, X86, Other)), "ARM64 の impl だけ別ビルド");
         Assert.True(!build.IsInstalled(TipFolder(root, "before-split", null, null)), "stub と impl に分割する前の登録 (MeltypeTipImpl.dll.sha256 が無い)");
     });
 }

@@ -39,7 +39,7 @@ OutputBaseFilename=Meltype-{#AppVersion}-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-; 同梱の .NET ランタイムは x64 (ARM64 の Windows 11 でも x64 のエミュレーションで動く)
+; 同梱の .NET ランタイムは x64 (ARM64 の Windows 11 でも x64 のエミュレーションで動く)。Meltype IME は x64・x86・ARM64 を同梱する
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile={#SourceDir}\LICENSE.txt
