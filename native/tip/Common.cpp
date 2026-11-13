@@ -49,9 +49,9 @@ static bool SelfIsMediumOrLower() {
 void TipLog(const wchar_t* format, ...) {
     static int enabled = -1;
     static ULONGLONG nextCheck = 0;
-    const ULONGLONG now = GetTickCount64();
-    if (enabled != 1 && now >= nextCheck) {
-        nextCheck = now + 1000;
+    const ULONGLONG tick = GetTickCount64();
+    if (enabled != 1 && tick >= nextCheck) {
+        nextCheck = tick + 1000;
         enabled = 0;
         if (!SelfIsMediumOrLower()) return;
         wchar_t value[8] = {};
