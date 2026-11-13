@@ -66,6 +66,7 @@ internal sealed class TipServer : IDisposable
     /// </summary>
     public static bool IsUsable =>
         InstalledBuild() == true && IsInUserLanguageList;
+    internal static bool? IsInstalledBuild => InstalledBuild();
 
     /// <summary>
     /// 登録されているが、登録済みの impl がこの Meltype.exe と別ビルドか。Meltype IME の再登録 (UAC) をせずに Meltype.exe だけを更新すると、こうなる
@@ -110,7 +111,14 @@ internal sealed class TipServer : IDisposable
                 foreach (var language in profiles.GetSubKeyNames())
                 {
                     using var key = profiles.OpenSubKey(language);
-                    if (key?.GetValueNames().Any(name => name.Contains("{417D801B-A9BD-4C26-BD16-356A825A6998}", StringComparison.OrdinalIgnoreCase)) == true) return true;
+                    if (key is null) continue;
+                    if (key.GetValueNames().Any(name => name.Contains("{417D801B-A9BD-4C26-BD16-356A825A6998}", StringComparison.OrdinalIgnoreCase))) return true;
+                    foreach (var name in key.GetValueNames())
+                    {
+                        var value = key.GetValue(name);
+                        if (value is string text && text.Contains("{417D801B-A9BD-4C26-BD16-356A825A6998}", StringComparison.OrdinalIgnoreCase)) return true;
+                        if (value is string[] texts && texts.Any(text => text.Contains("{417D801B-A9BD-4C26-BD16-356A825A6998}", StringComparison.OrdinalIgnoreCase))) return true;
+                    }
                 }
             }
             catch
