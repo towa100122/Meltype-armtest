@@ -3,7 +3,7 @@
 #
 # Meltype IME (TSF の DLL) をビルドする。Visual Studio Build Tools (C++) が要る。
 #   powershell -ExecutionPolicy Bypass -File native\tip\build.ps1 [-Configuration Release|Debug]
-# 出力: native\tip\bin\x64 と native\tip\bin\x86 (32bit のアプリ用) に、MeltypeTip.dll (stub) と MeltypeTipImpl.dll (impl)
+# 出力: native\tip\bin\x64・x86・arm64 に、MeltypeTip.dll (stub) と MeltypeTipImpl.dll (impl)
 
 param([ValidateSet('Release', 'Debug')][string]$Configuration = 'Release')
 
@@ -32,11 +32,15 @@ $dlls = @(
 $optimize = if ($Configuration -eq 'Release') { '/O2 /MT /DNDEBUG' } else { '/Od /MTd /Zi' }
 $libs = 'ole32.lib oleaut32.lib uuid.lib user32.lib gdi32.lib advapi32.lib d2d1.lib dwrite.lib dwmapi.lib'
 
-foreach ($arch in 'x64', 'x86') {
+foreach ($arch in 'x64', 'x86', 'arm64') {
     $out = Join-Path $here "bin\$arch"
     $obj = Join-Path $here "obj\$arch"
     New-Item -ItemType Directory -Force -Path $out, $obj | Out-Null
-    $vcarch = if ($arch -eq 'x64') { 'x64' } else { 'x64_x86' }
+    $vcarch = switch ($arch) {
+        'x64' { 'x64' }
+        'x86' { 'x64_x86' }
+        'arm64' { 'x64_arm64' }
+    }
     $cmd = @(
         "`"$vcvars`" $vcarch >nul",
         "cd /d `"$here`"",
