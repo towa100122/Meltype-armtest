@@ -81,7 +81,10 @@ internal sealed class MeltypeEngine : IDisposable
     private static Settings RunningSettings(Settings? previous, Settings next)
     {
         if (next.Mode != InputMode.Tsf || (!AppPaths.IsPortable && Tip.TipServer.IsUsable)) return next;
-        if (previous?.Mode != next.Mode) Log.Warn("Meltype IME を使えない (ポータブル版・登録されていない・登録済みの Meltype IME がこの Meltype.exe と別ビルド・キーボードの一覧に無い) ので、Meltype キーボードで動かします。");
+        if (previous?.Mode != next.Mode)
+        {
+            Log.Warn($"Meltype IME を使えないので、Meltype キーボードで動かします (portable={AppPaths.IsPortable}, registered={Tip.TipServer.IsRegistered}, installed={Tip.TipServer.IsInstalledBuild}, languageList={Tip.TipServer.IsInUserLanguageList})。");
+        }
         var running = next.Clone();
         running.Mode = InputMode.Keyboard;
         return running;
