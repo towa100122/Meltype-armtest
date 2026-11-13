@@ -24,6 +24,14 @@ $regsvr64 = Join-Path $windows 'System32\regsvr32.exe'
 if (-not [Environment]::Is64BitProcess -and [Environment]::Is64BitOperatingSystem) { $regsvr64 = Join-Path $windows 'Sysnative\regsvr32.exe' }
 $regsvr32 = Join-Path $windows 'SysWOW64\regsvr32.exe'
 
+# ARM64 Windows は x64 と ARM64 が同じ 64 ビットの COM 登録ビューを使うため、ARM64X を 1 つだけ登録する。
+# x64 Windows では通常の x64 DLL を登録する。
+$nativeArch = if (
+    $env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or
+    $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64' -or
+    (Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name PROCESSOR_ARCHITECTURE -ErrorAction SilentlyContinue).PROCESSOR_ARCHITECTURE -eq 'ARM64'
+) { 'arm64' } else { 'x64' }
+
 function Write-Log([string]$message) {
     Write-Host $message
     # 別の管理者のアカウントで動いていると、ログの場所 (元のユーザーの TEMP) に書けないことがある。書けなくても続ける
@@ -42,7 +50,7 @@ function Invoke-Regsvr([string]$exe, [string]$dll, [switch]$Remove) {
 
 $unregisterFailed = $false
 try {
-    foreach ($arch in 'x64', 'x86', 'arm64') {
+    foreach ($arch in $nativeArch, 'x86') {
         $exe = switch ($arch) {
             'x64' { $regsvr64 }
             'x86' { $regsvr32 }
