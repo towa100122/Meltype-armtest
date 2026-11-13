@@ -38,7 +38,7 @@ function Build-Dlls([string]$arch, [string]$vcarch, [string]$out, [string]$obj, 
     $obj = Join-Path $here "obj\$arch"
     New-Item -ItemType Directory -Force -Path $out, $obj | Out-Null
     $cmd = @(
-        "`"$vcvars`" $vcarch >nul",
+        "call `"$vcvars`" $vcarch",
         "cd /d `"$here`"",
         "rc /nologo /fo `"$obj\MeltypeTip.res`" MeltypeTip.rc"
     ) + @($dlls | ForEach-Object {
@@ -86,7 +86,7 @@ foreach ($name in $dlls.Name) {
     $obj = Join-Path $here 'obj\arm64ec'
     New-Item -ItemType Directory -Force -Path $out, $obj | Out-Null
     $cmd = @(
-        "`"$vcvars`" x64_arm64ec >nul",
+        "call `"$vcvars`" x64_arm64ec",
         "cd /d `"$here`"",
         "cl /nologo /Brepro /arm64EC /std:c++17 /EHsc /W4 /wd4100 /utf-8 /DUNICODE /D_UNICODE $optimize /Fo`"$obj\\`" /Fd`"$obj\\`" /LD $sources `"$nativeRes`" /link /Brepro /machine:arm64x /DEF:$name.def /IMPLIB:`"$obj\$name.lib`" /OUT:`"$out\$name.dll`" $libs $nativeArgs"
     ) -join ' && '
